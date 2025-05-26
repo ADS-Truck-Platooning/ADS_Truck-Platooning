@@ -2,3 +2,6 @@
 	path = platoon_ws/src/v_platoon
 	url = https://github.com/ADS-Truck-Platooning/v-platoon.git
 	branch = main
+[submodule "platoon_ws/src/obstacle_detector"]
+	path = platoon_ws/src/obstacle_detector
+	url = https://github.com/ADS-Truck-Platooning/obstacle_detector_2.git
