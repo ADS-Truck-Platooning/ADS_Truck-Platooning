@@ -8,7 +8,12 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclcpp_components REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(visualization_msgs REQUIRED)
+find_package(pcl_conversions REQUIRED)
+find_package(pcl_ros REQUIRED)
 
 include_directories(
   include
@@ -30,13 +35,37 @@ target_include_directories(circle_tracking_node PUBLIC
 )
 
 # ───── Executable: pointcloud2_roi_node ─────
-add_executable(pointcloud2_roi_node
+add_library(pointcloud2_roi SHARED
   src/pointcloud2_roi.cpp
+)
+
+ament_target_dependencies(pointcloud2_roi
+  rclcpp
+  rclcpp_components
+  sensor_msgs
+  visualization_msgs
+  pcl_conversions
+  pcl_ros
+)
+
+target_include_directories(pointcloud2_roi PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
+
+rclcpp_components_register_nodes(pointcloud2_roi
+  "truck_detection::PointCloud2ROI")
+
+add_executable(pointcloud2_roi_node
+  src/pointcloud2_roi_node.cpp
+)
+
+target_link_libraries(pointcloud2_roi_node
+  pointcloud2_roi
 )
 
 ament_target_dependencies(pointcloud2_roi_node
   rclcpp
-  std_msgs
 )
 
 target_include_directories(pointcloud2_roi_node PUBLIC
