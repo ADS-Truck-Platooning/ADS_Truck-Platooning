@@ -44,7 +44,9 @@ class LaneDetection(Node):
             self.image = self.bridge.imgmsg_to_cv2(msg, "bgr8")
             middle_points = self.image_processor.frame_processor(self.image)
 
-            relative_points = middle_points            
+            relative_points = []
+            for point in middle_points:
+                relative_points.append(convert_pixel_to_world(*point))            
             self.publish_path(relative_points)
 
         except CvBridgeError as e:

@@ -1,7 +1,6 @@
 import numpy as np
 import cv2 as cv
 import math
-
 class ImageProcessor():
     def __init__(self):
         # self.warp_parameters = [(160,220),(55 ,480),(460,220),(550,480)]
@@ -9,9 +8,9 @@ class ImageProcessor():
         # self.warp_parameters = [(274, 0), (0, 480), (366, 0), (640, 480)]
         # self.warp_parameters = [(258, 28), (0, 480), (382, 28), (640, 480)]
         # self.warp_parameters = [(250, 42), (0, 480), (390 , 42), (640, 480)]
-        self.warp_parameters = [(243, 55), (0, 480), (397, 55), (640, 480)]
+        # self.warp_parameters = [(243, 55), (0, 480), (397, 55), (640, 480)]
         # self.warp_parameters = [(269, 55), (110, 480), (371, 55), (530, 480)]
-        # self.warp_parameters = [(211, 110), (0, 480), (429, 110), (640, 480)]
+        self.warp_parameters = [(211, 110), (0, 480), (429, 110), (640, 480)]
         # self.warp_parameters = [(249, 110), (110, 480), (391, 110), (530, 480)]
         # self.warp_parameters = [(149, 220), (0, 480), (491, 220), (640, 480)]
         # self.warp_parameters = [(207, 220), (110, 480), (433, 220), (530, 480)]
@@ -52,12 +51,6 @@ class ImageProcessor():
         #if dbg is not None:
         cv.imshow("Lane Debug", dbg)
 
-          # fallback: 중앙점 인식 실패 시 이전 프레임의 중앙값 사용
-        # if centers and len(centers) > 0:
-        #     self.prev_centers = centers
-        # else:
-        #     print("Detection failed. Using previous centers.")
-        #     centers = self.prev_centers if self.prev_centers else []
         self.prev_centers = centers
 
         if centers:
@@ -74,10 +67,6 @@ class ImageProcessor():
 
         return centers
 
-
-
-
-
     def warp_image(self, image):
         height, width = image.shape
         pts1 = np.float32([self.warp_parameters[0], self.warp_parameters[1], self.warp_parameters[2], self.warp_parameters[3]]) 
@@ -88,7 +77,7 @@ class ImageProcessor():
 
         return transformed_frame, matrix
 
-    def sliding_window_dual(self, binary_warped, nwindows=15, margin=70, minpix=30,
+    def sliding_window_dual(self, binary_warped, nwindows=15, margin=70, minpix=400,
                         draw=False):
         """
         좌·우 차선을 동시에 찾는 슬라이딩 윈도우
@@ -103,14 +92,15 @@ class ImageProcessor():
         _, binary_warped = cv.threshold(binary_warped, 1, 255, cv.THRESH_BINARY)
 
         H, W = binary_warped.shape # 480, 640
-        histogram = np.sum(binary_warped[H//2:, :], axis=0)
+        # histogram = np.sum(binary_warped[H//2:, :], axis=0)
+        histogram = np.sum(binary_warped, axis=0) # 히스토그램 전체로 다 보기
 
         midpoint     = W // 2
         leftx_base   = np.argmax(histogram[:midpoint])
         rightx_relative = np.argmax(histogram[midpoint:])
         rightx_base = rightx_relative + midpoint
-        if histogram[rightx_base] == 0:
-            rightx_base = int(W * 0.85)
+        # if histogram[rightx_base] == 0:
+        #     rightx_base = int(W * 0.85)
 
         # non-zero 픽셀 좌표
         nz_y, nz_x   = binary_warped.nonzero()
@@ -145,6 +135,8 @@ class ImageProcessor():
 
             left_inds.append(good_left)
             right_inds.append(good_right)
+            # print("left: ",good_left.size)
+            # print("right: ",good_right.size)
 
             # 픽셀 수 충분하면 윈도우 중심 이동
             if good_left.size  > minpix:  leftx_cur  = int(np.mean(nz_x[good_left]))
@@ -168,12 +160,11 @@ class ImageProcessor():
                 # print("right good")
             elif self.prev_centers is not None and len(self.prev_centers) > window:
                 center_x = self.prev_centers[window][0]
-                print("Lane Lost -> Follow prev centers")
             else:
                 continue
 
             centers.append((center_x, center_y))
-            # prev_center_x = center_x
+            prev_center_x = center_x
 
             if draw:
                 # 녹색 윈도우 사각형
@@ -238,9 +229,9 @@ class ImageProcessor():
         if n_sample is None:
             y_out = ys                               # 원래 개수
         else:
-            y_out = np.linspace(ys.min(), ys.max(), n_sample)
+            # y_out = np.linspace(ys.min(), ys.max(), n_sample)
             # print(ys.min(), ys.max())
-            # y_out = np.linspace(0, 640, n_sample)
+            y_out = np.linspace(0, 640, n_sample)
 
         x_out = np.polyval(coeff, y_out)
         smooth_pts = list(map(tuple, np.stack([x_out, y_out], axis=1)))
