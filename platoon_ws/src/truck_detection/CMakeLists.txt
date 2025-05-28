@@ -11,22 +11,53 @@ find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(pcl_conversions REQUIRED)
 find_package(pcl_ros REQUIRED)
+
+find_package(obstacle_detector REQUIRED)
+# find_package(builtin_interfaces REQUIRED)
+# find_package(rosidl_default_generators REQUIRED)
+
+# rosidl_generate_interfaces(${PROJECT_NAME}
+#   "msg/CircleObstacle.msg"
+#   "msg/Obstacles.msg"
+#   "msg/SegmentObstacle.msg"
+#   DEPENDENCIES geometry_msgs std_msgs builtin_interfaces 
+# )
 
 include_directories(
   include
 )
 
 # ───── Executable: circle_tracking_node ─────
-add_executable(circle_tracking_node
+add_library(circle_tracking
   src/circle_tracking.cpp
+)
+
+ament_target_dependencies(circle_tracking
+  rclcpp
+  std_msgs
+  geometry_msgs
+  obstacle_detector
+)
+
+target_include_directories(circle_tracking PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
+
+add_executable(circle_tracking_node
+  src/circle_tracking_node.cpp
+)
+
+target_link_libraries(circle_tracking_node
+  circle_tracking
 )
 
 ament_target_dependencies(circle_tracking_node
   rclcpp
-  std_msgs
 )
 
 target_include_directories(circle_tracking_node PUBLIC
