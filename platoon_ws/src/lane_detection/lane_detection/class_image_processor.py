@@ -16,40 +16,49 @@ class ImageProcessor():
         # self.warp_parameters = [(149, 220), (0, 480), (491, 220), (640, 480)]
         # self.warp_parameters = [(207, 220), (110, 480), (433, 220), (530, 480)]
 
-        self.hsv_values = (0, 0, 160) #(0, 0, 160)
+        self.hsv_values = (0, 0, 140) #(0, 0, 160)
+        self.prev_centers = None
 
     def frame_processor(self, image):
         cv.imshow('Original Image', image)
 
         hsv = cv.cvtColor(image, cv.COLOR_BGR2HSV)
         binary_color = cv.inRange(hsv, self.hsv_values, (180, 255, 255))
-        cv.imshow('HSV Image', binary_color)
+        # cv.imshow('HSV Image', binary_color)
 
+        # gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
         gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
-        cv.imshow('Gray Image', gray)
+        clahe = cv.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+        gray = clahe.apply(gray)
+        # cv.imshow('Gray Image', gray)
 
         blur = cv.GaussianBlur(gray, (5, 5), 0)
-        cv.imshow('Blur Image', blur)
+        # cv.imshow('Blur Image', blur)
 
         edges = cv.Canny(blur, 50, 150)
         contours, _ = cv.findContours(edges, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
         cv.drawContours(edges, contours, -1, (255), 5)
-        cv.imshow('Edges Image', edges)
+        # cv.imshow('Edges Image', edges)
 
         binary = cv.bitwise_and(binary_color, edges)
-        cv.imshow('Filtered Image', binary)
+        # cv.imshow('Filtered Image', binary)
 
         warped_image, M = self.warp_image(binary)
         M_inv = np.linalg.inv(M) 
-        cv.imshow('Warp Image', warped_image)
+        # cv.imshow('Warp Image', warped_image)
 
         # centers, dbg = self.sliding_window_dual(warped_image, nwindows=16, draw=True)
         centers, dbg = self.sliding_window_dual(warped_image, nwindows=16, draw=True)
-        if centers is not None:
-            # print("Centers:", centers)
-            pass
-        if dbg is not None:
-            cv.imshow("Lane Debug", dbg)
+        #if dbg is not None:
+        cv.imshow("Lane Debug", dbg)
+
+          # fallback: 중앙점 인식 실패 시 이전 프레임의 중앙값 사용
+        # if centers and len(centers) > 0:
+        #     self.prev_centers = centers
+        # else:
+        #     print("Detection failed. Using previous centers.")
+        #     centers = self.prev_centers if self.prev_centers else []
+        self.prev_centers = centers
 
         if centers:
             pts = np.float32(centers).reshape(-1,1,2)
@@ -65,6 +74,10 @@ class ImageProcessor():
 
         return centers
 
+
+
+
+
     def warp_image(self, image):
         height, width = image.shape
         pts1 = np.float32([self.warp_parameters[0], self.warp_parameters[1], self.warp_parameters[2], self.warp_parameters[3]]) 
@@ -75,7 +88,7 @@ class ImageProcessor():
 
         return transformed_frame, matrix
 
-    def sliding_window_dual(self, binary_warped, nwindows=9, margin=70, minpix=30,
+    def sliding_window_dual(self, binary_warped, nwindows=15, margin=70, minpix=30,
                         draw=False):
         """
         좌·우 차선을 동시에 찾는 슬라이딩 윈도우
@@ -112,7 +125,6 @@ class ImageProcessor():
 
         # 중앙점 설정
         centers = []
-
         # 시각화용
         out_img = cv.cvtColor(binary_warped, cv.COLOR_GRAY2BGR) if draw else None
 
@@ -138,22 +150,30 @@ class ImageProcessor():
             if good_left.size  > minpix:  leftx_cur  = int(np.mean(nz_x[good_left]))
             if good_right.size > minpix:  rightx_cur = int(np.mean(nz_x[good_right]))
 
+
+            center_y = (win_y_low + win_y_high) // 2
+
             # 중앙점 작업
             # param = 300
             # param = 190
             param = 200
             if good_left.size > minpix and good_right.size > minpix:
                 center_x = (leftx_cur + rightx_cur) // 2
-                center_y = (win_y_low + win_y_high) // 2
-                centers.append((center_x, center_y))
+                # print("all good")
             elif good_left.size  > minpix:
                 center_x = leftx_cur + param
-                center_y = (win_y_low + win_y_high) // 2
-                centers.append((center_x, center_y))
+                # print("left good")
             elif good_right.size > minpix:
                 center_x = rightx_cur - param
-                center_y = (win_y_low + win_y_high) // 2
-                centers.append((center_x, center_y))
+                # print("right good")
+            elif self.prev_centers is not None and len(self.prev_centers) > window:
+                center_x = self.prev_centers[window][0]
+                print("Lane Lost -> Follow prev centers")
+            else:
+                continue
+
+            centers.append((center_x, center_y))
+            # prev_center_x = center_x
 
             if draw:
                 # 녹색 윈도우 사각형
@@ -170,7 +190,7 @@ class ImageProcessor():
         plot_y   = np.linspace(0, H-1, H)
 
         # 중앙점 작업
-        centers = self.smooth_centers(centers, degree=2, n_sample=nwindows)
+        # centers = self.smooth_centers(centers, degree=2, n_sample=nwindows)
 
         if left_inds.size:
             lx = nz_x[left_inds]; ly = nz_y[left_inds]
