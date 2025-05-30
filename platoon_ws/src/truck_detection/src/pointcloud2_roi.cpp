@@ -13,47 +13,30 @@ PointCloud2ROI::PointCloud2ROI(const rclcpp::NodeOptions & options)
 : rclcpp::Node("pointcloud2_roi", options)
 {
   // Declare parameters with defaults
+  this->declare_parameter("truck_id", 0);
   this->declare_parameter("x_min", 0.0);
   this->declare_parameter("x_max", 30.0);
   this->declare_parameter("y_min", -5.0);
   this->declare_parameter("y_max",  5.0);
   this->declare_parameter("roi_angle_deg", 45.0);
-  this->declare_parameter("input_topic", "/cloud_in");
-  this->declare_parameter("output_topic", "/cloud_roi");
-  this->declare_parameter("marker_topic", "/marker");
 
   updateParameters();   // cache first set
 
-  // Parameter update callback (hot-reload)
-  param_cb_ = this->add_on_set_parameters_callback(
-    [this](const std::vector<rclcpp::Parameter> & p)
-    {
-      for (const auto & param : p)
-      {
-        if (param.get_name() == "x_min")          x_min_ = param.as_double();
-        else if (param.get_name() == "x_max")     x_max_ = param.as_double();
-        else if (param.get_name() == "y_min")     y_min_ = param.as_double();
-        else if (param.get_name() == "y_max")     y_max_ = param.as_double();
-        else if (param.get_name() == "roi_angle_deg") roi_angle_deg_ = param.as_double();
-      }
-      return rcl_interfaces::msg::SetParametersResult().set__successful(true);
-    });
-
-  std::string in_topic  = this->get_parameter("input_topic").as_string();
-  std::string out_topic = this->get_parameter("output_topic").as_string();
-
+  const std::string in_topic = "/truck" + std::to_string(truck_id_) + "/front_lidar";
   sub_ = this->create_subscription<sensor_msgs::msg::PointCloud2>(
       in_topic, rclcpp::SensorDataQoS(),
       std::bind(&PointCloud2ROI::cloudCallback, this, std::placeholders::_1));
-
+  
+  const std::string out_topic = "/truck" + std::to_string(truck_id_) + "/front_lidar/roi";
   pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(out_topic, 10);
 
-  std::string marker_topic = this->get_parameter("marker_topic").as_string();
+  const std::string marker_topic = "/truck" + std::to_string(truck_id_) + "/front_lidar/roi_marker";
   marker_pub_ = this->create_publisher<visualization_msgs::msg::Marker>(marker_topic, 1);
 }
 
 void PointCloud2ROI::updateParameters()
 {
+  truck_id_ = this->get_parameter("truck_id").as_int();
   x_min_ = this->get_parameter("x_min").as_double();
   x_max_ = this->get_parameter("x_max").as_double();
   y_min_ = this->get_parameter("y_min").as_double();

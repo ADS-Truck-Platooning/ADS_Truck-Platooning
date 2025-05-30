@@ -22,8 +22,10 @@ private:
   rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr pub_;
 
   // Parameters
+  int truck_id_;
   
   void obstaclesCallback(const obstacle_detector::msg::Obstacles::ConstSharedPtr & msg);
+  void updateParameters();
 };
 
 } // namespace truck_detection

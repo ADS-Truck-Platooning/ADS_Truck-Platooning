@@ -2,7 +2,6 @@
 #define TRUCK_DETECTION__POINTCLOUD2_ROI_HPP_
 
 #include <rclcpp/rclcpp.hpp>
-#include <rclcpp/node_interfaces/node_parameters_interface.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <visualization_msgs/msg/marker.hpp>
 
@@ -21,6 +20,7 @@ private:
   rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr marker_pub_;
 
   // Parameters (doubles for simplicity)
+  int truck_id_;
   double x_min_, x_max_;
   double y_min_, y_max_;
   double roi_angle_deg_;
@@ -28,9 +28,6 @@ private:
   // Helpers
   void cloudCallback(const sensor_msgs::msg::PointCloud2::ConstSharedPtr & msg);
   void updateParameters();
-
-  // Parameter event callback (optional, auto-update at runtime)
-  rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr param_cb_;
 };
     
 } // namespace truck_detection

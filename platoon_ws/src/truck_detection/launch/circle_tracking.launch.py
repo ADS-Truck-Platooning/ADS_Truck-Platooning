@@ -1,4 +1,3 @@
-# launch/pointcloud2_roi.launch.py
 import os
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, OpaqueFunction, Shutdown
@@ -11,16 +10,10 @@ def generate_nodes(context, *, num_trucks):
     for i in range(1, int(num_trucks)):
         node = Node(
             package     = 'truck_detection',
-            executable  = 'pointcloud2_roi_node',
+            executable  = 'circle_tracking_node',
             output='screen',
             parameters  = [{
-                # ROI 파라미터를 원하는 값으로 수정!
-                'truck_id':       i,
-                'x_min':         0.0,
-                'x_max':          30.0,
-                'y_min':         -3.6,
-                'y_max':          3.6,
-                'roi_angle_deg':  30.0,
+                'truck_id': i
             }]
         )
         nodes.append(node)
