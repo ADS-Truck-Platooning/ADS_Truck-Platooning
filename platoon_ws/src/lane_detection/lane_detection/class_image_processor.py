@@ -17,9 +17,10 @@ class ImageProcessor():
 
         self.hsv_values = (0, 0, 140) #(0, 0, 160)
         self.prev_centers = None
+        self.front_distance_m = None
 
     def frame_processor(self, image):
-        cv.imshow('Original Image', image)
+        # cv.imshow('Original Image', image)
 
         hsv = cv.cvtColor(image, cv.COLOR_BGR2HSV)
         binary_color = cv.inRange(hsv, self.hsv_values, (180, 255, 255))
@@ -46,7 +47,7 @@ class ImageProcessor():
         M_inv = np.linalg.inv(M) 
         # cv.imshow('Warp Image', warped_image)
 
-        # centers, dbg = self.sliding_window_dual(warped_image, nwindows=16, draw=True)
+
         centers, dbg = self.sliding_window_dual(warped_image, nwindows=16, draw=True)
         #if dbg is not None:
         cv.imshow("Lane Debug", dbg)
@@ -64,7 +65,6 @@ class ImageProcessor():
             cv.imshow("Centers on Original", gray)
 
         cv.waitKey(1)
-
         return centers
 
     def warp_image(self, image):
@@ -77,7 +77,7 @@ class ImageProcessor():
 
         return transformed_frame, matrix
 
-    def sliding_window_dual(self, binary_warped, nwindows=15, margin=70, minpix=400,
+    def sliding_window_dual(self, binary_warped, nwindows=15, margin=70, minpix=300,
                         draw=False):
         """
         좌·우 차선을 동시에 찾는 슬라이딩 윈도우
@@ -92,8 +92,19 @@ class ImageProcessor():
         _, binary_warped = cv.threshold(binary_warped, 1, 255, cv.THRESH_BINARY)
 
         H, W = binary_warped.shape # 480, 640
+
+        # ===== 앞차 거리 기반 ROI 계산 =====
+        if self.front_distance_m is not None:
+            pixel_limit = int(self.front_distance_m * 45.3279) # 1m 당 45.329px
+            pixel_limit = min(pixel_limit, H)
+        else:
+            pixel_limit = H
+        nwindows = 10 if pixel_limit < 300 else 16 # window 개수를 pixel_limit(ROI 높이)에 따라 다르게 설정
+        
+
         # histogram = np.sum(binary_warped[H//2:, :], axis=0)
-        histogram = np.sum(binary_warped, axis=0) # 히스토그램 전체로 다 보기
+        # histogram = np.sum(binary_warped, axis=0) # 히스토그램 전체로 다 보기
+        histogram = np.sum(binary_warped[H - pixel_limit : H, :], axis=0) # 히스토그램 ROI만큼만 보기
 
         midpoint     = W // 2
         leftx_base   = np.argmax(histogram[:midpoint])
@@ -106,15 +117,15 @@ class ImageProcessor():
         nz_y, nz_x   = binary_warped.nonzero()
 
         # 윈도우 설정
-        win_h        = H // nwindows
+        # win_h        = H // nwindows
+        win_h = pixel_limit // nwindows
+        minpix = int(win_h * (300 / 30)) # 차간 거리 - 윈도우 개수 - 윈도우 높이에 영향을 주기 때문에 minpx도 비례상수 이용하여 계산
         leftx_cur    = leftx_base
         rightx_cur   = rightx_base
-        # leftx_cur    = 100
-        # rightx_cur   = 640-100
         left_inds, right_inds = [], []
-
         # 중앙점 설정
         centers = []
+
         # 시각화용
         out_img = cv.cvtColor(binary_warped, cv.COLOR_GRAY2BGR) if draw else None
 
@@ -135,8 +146,8 @@ class ImageProcessor():
 
             left_inds.append(good_left)
             right_inds.append(good_right)
-            # print("left: ",good_left.size)
-            # print("right: ",good_right.size)
+            print("left: ",good_left.size, "minpix: ", minpix)
+            # print("right: ",good_right.size, "minpix: ", minpix)
 
             # 픽셀 수 충분하면 윈도우 중심 이동
             if good_left.size  > minpix:  leftx_cur  = int(np.mean(nz_x[good_left]))

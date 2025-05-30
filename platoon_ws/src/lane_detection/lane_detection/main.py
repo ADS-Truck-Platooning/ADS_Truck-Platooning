@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from .class_image_processor import ImageProcessor
-from .cam_pixel_world_transform import convert_pixel_to_world
+from .cam_pixel_world_transform import convert_pixel_to_world, convert_world_to_pixel
 
 from sensor_msgs.msg import Image
 
@@ -12,7 +12,7 @@ from rclpy.qos import qos_profile_sensor_data
 import argparse
 
 from nav_msgs.msg import Path
-from geometry_msgs.msg import PoseStamped, Quaternion
+from geometry_msgs.msg import PoseStamped, Quaternion, Pose
 import math
 
 import cv2
@@ -33,6 +33,14 @@ class LaneDetection(Node):
             qos_profile_sensor_data)
         self.image_sub
 
+        # Pose Subscriber (앞차 위치)
+        self.front_pose_sub = self.create_subscription(
+            Pose,
+            f'/truck{self.truck_id}/front_pose',
+            self.front_pose_callback,
+            10
+        )
+
         topic_name = f'/platoon/truck{self.truck_id}/path'
         self.path_publisher = self.create_publisher(Path, topic_name, 10)
 
@@ -51,6 +59,14 @@ class LaneDetection(Node):
 
         except CvBridgeError as e:
             print(e)
+
+    def front_pose_callback(self, msg: Pose):
+        try:
+            distance_m = msg.position.x
+            self.image_processor.front_distance_m = distance_m
+        except Exception as e:
+            self.get_logger().warn(f"Pose 처리 실패: {e}")
+
     
     def publish_path(self, relative_points):
         path_msg = Path()
