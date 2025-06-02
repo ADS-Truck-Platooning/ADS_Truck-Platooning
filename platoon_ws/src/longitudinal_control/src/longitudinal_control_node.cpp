@@ -1,5 +1,10 @@
-#include "longitudinal_control/longitudinal_control_node.hpp"
+#include "longitudinal_control/longitudinal_control.hpp"
+#include "rclcpp/rclcpp.hpp"
 
-namespace longitudinal_control
+int main(int argc, char ** argv)
 {
+  rclcpp::init(argc, argv);
+  rclcpp::spin(std::make_shared<longitudinal_control::LongitudinalController>());
+  rclcpp::shutdown();
+  return 0;
 }

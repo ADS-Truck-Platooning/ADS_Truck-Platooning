@@ -9,6 +9,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
 
 include_directories(
   include
@@ -31,7 +32,7 @@ ament_target_dependencies(gap_control_node
 
 # ───── Library (Velocity Control) ─────
 add_library(velocity_control_node
-  src/gap_control.cpp
+  src/velocity_control.cpp
 )
 
 target_include_directories(velocity_control_node PUBLIC
@@ -46,8 +47,8 @@ ament_target_dependencies(velocity_control_node
 
 # ───── Executable Node ─────
 add_executable(longitudinal_control_node
-  src/main.cpp
   src/longitudinal_control_node.cpp
+  src/longitudinal_control.cpp
 )
 
 target_link_libraries(longitudinal_control_node
@@ -58,6 +59,7 @@ target_link_libraries(longitudinal_control_node
 ament_target_dependencies(longitudinal_control_node
   rclcpp
   std_msgs
+  geometry_msgs
 )
 
 # ───── Install ─────
