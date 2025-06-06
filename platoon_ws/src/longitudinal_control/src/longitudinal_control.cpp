@@ -26,10 +26,12 @@ LongitudinalController::LongitudinalController(const rclcpp::NodeOptions & optio
     this->declare_parameter("vel_ki", 2.0);
     this->declare_parameter("k_aw", 1e-4);
     this->declare_parameter("throttle_limit", 1.0);
+    this->declare_parameter("ff_gain", 0.05);
     vel_kp_ = this->get_parameter("vel_kp").as_double();
     vel_ki_ = this->get_parameter("vel_ki").as_double();
     k_aw_ = this->get_parameter("k_aw").as_double();
     throttle_limit_ = this->get_parameter("throttle_limit").as_double();
+    ff_gain_ = this->get_parameter("ff_gain").as_double();
 
     this->declare_parameter("truck_id", 0);
     this->declare_parameter("desired_velocity", 36.0);
@@ -37,7 +39,7 @@ LongitudinalController::LongitudinalController(const rclcpp::NodeOptions & optio
     desired_velocity_ = this->get_parameter("desired_velocity").as_double();
 
     gap_ctrl_.param(gap_kp_, gap_kd_, desired_gap_);
-    vel_ctrl_.param(vel_kp_, vel_ki_, k_aw_, throttle_limit_);
+    vel_ctrl_.param(vel_kp_, vel_ki_, k_aw_, throttle_limit_, ff_gain_);
 
     // Subscriptions -----------------------------------------------------------
     if (truck_id_ != 0)

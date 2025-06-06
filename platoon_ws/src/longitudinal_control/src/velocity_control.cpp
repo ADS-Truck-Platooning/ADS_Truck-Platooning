@@ -3,19 +3,24 @@
 namespace longitudinal_control
 {
 
-VelocityController::VelocityController() {}
+VelocityController::VelocityController()
+: kp_(0.0), ki_(0.0), aw_gain_(0.0),
+  throttle_limit_(1.0), ff_gain_(0.0), integral_(0.0) {}
 
 VelocityController::VelocityController(double kp, double ki,
-                                       double aw_gain, double throttle_limit)
+                                       double aw_gain,
+                                       double throttle_limit, double ff_gain)
 : kp_(kp), ki_(ki), aw_gain_(aw_gain),
-  throttle_limit_(throttle_limit), integral_(0.0) {}
+  throttle_limit_(throttle_limit), ff_gain_(ff_gain), integral_(0.0) {}
 
-void VelocityController::param(double kp, double ki, double aw_gain, double throttle_limit)
+void VelocityController::param(double kp, double ki, double aw_gain,
+                               double throttle_limit, double ff_gain)
 {
     kp_ = kp;
     ki_ = ki;
     aw_gain_ = aw_gain;
     throttle_limit_ = throttle_limit;
+    ff_gain_ = ff_gain;
 }
 
 double VelocityController::update(double velocity_error, double dt)
@@ -40,7 +45,7 @@ double VelocityController::update(double ref_vel,
                                   double dt)
 {
   // --- Feed-Forward --------------------------------------------------
-  double u_ff = 1.0 * ref_vel;               // 가장 단순한 형태 (선형 비례)
+  double u_ff = ff_gain_ * ref_vel;               // scaled feed-forward
 
   // --- PI ------------------------------------------------------------
   double vel_error = ref_vel - meas_vel;

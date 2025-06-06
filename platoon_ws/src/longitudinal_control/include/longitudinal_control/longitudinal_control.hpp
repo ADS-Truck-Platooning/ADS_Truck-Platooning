@@ -39,6 +39,7 @@ private:
   double vel_ki_;
   double k_aw_;
   double throttle_limit_;
+  double ff_gain_;
 
   // --- State variables ------------------------------------------------------
   double lead_x_;

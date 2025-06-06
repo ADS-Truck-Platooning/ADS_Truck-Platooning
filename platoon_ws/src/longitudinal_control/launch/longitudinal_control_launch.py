@@ -21,6 +21,7 @@ def generate_nodes(context, *, num_trucks):
                 {'vel_ki': 2.0},
                 {'k_aw': 1.0},
                 {'throttle_limit': 0.8},
+                {'ff_gain': 0.05},
                 {'truck_id': i},
                 {'desired_velocity': 10.0}
             ]
