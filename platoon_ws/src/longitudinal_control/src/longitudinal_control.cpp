@@ -7,13 +7,19 @@ namespace longitudinal_control
 LongitudinalController::LongitudinalController(const rclcpp::NodeOptions & options)
 : rclcpp::Node("longitudinal_controller", options),
   lead_x_(0.0),
+  lead_y_(0.0),
+  prev_lead_x_(0.0),
+  prev_lead_y_(0.0),
   ego_x_(0.0),
   current_gap_(0.0),
   prev_gap_(0.0),
   gap_rate_(0.0),
   lead_velocity_(0.0),
   ego_velocity_(0.0),
-  prev_time_(this->get_clock()->now())
+  ref_velocity_(0.0),
+  prev_time_(this->get_clock()->now()),
+  truck_id_(0),
+  desired_velocity_(0.0)
 {
     this->declare_parameter("gap_kp", 0.8);
     this->declare_parameter("gap_kd", 0.4);
