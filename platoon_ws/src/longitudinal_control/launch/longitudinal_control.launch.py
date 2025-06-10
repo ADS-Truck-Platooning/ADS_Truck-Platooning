@@ -11,19 +11,19 @@ def generate_nodes(context, *, num_trucks):
         node = Node(
             package='longitudinal_control',
             executable='longitudinal_control_node',
-            name='longitudinal_controller',
+            name=f'longitudinal_control_{i}',
             output='screen',
             parameters=[
-                {'gap_kp': 0.25},
-                {'gap_kd': 0.075},
-                {'desired_gap': 10.0},
+                {'gap_kp': 0.5},
+                {'gap_kd': 0.1},
+                {'desired_gap': 8.0},
                 {'vel_kp': 0.8},
                 {'vel_ki': 2.0},
-                {'k_aw': 1.0},
-                {'throttle_limit': 0.8},
-                {'ff_gain': 0.05},
+                {'k_aw': 0.5},
+                {'throttle_limit': 1.0},
+                {'ff_gain': 1.0},
                 {'truck_id': i},
-                {'desired_velocity': 10.0}
+                {'desired_velocity': 5.0}
             ]
         )
         nodes.append(node)

@@ -11,6 +11,7 @@ def generate_nodes(context, *, num_trucks, look_ahead_distance):
         node = Node(
             package='lateral_control',
             executable='lateral_control_node',
+            name=f'lateral_control_{i}',
             output='screen',
             parameters=[
                 {"truck_id": i},

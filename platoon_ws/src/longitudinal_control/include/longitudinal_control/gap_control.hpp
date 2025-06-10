@@ -10,6 +10,7 @@ public:
   GapController();
   GapController(double kp, double kd, double desired_gap);
   void param(double kp, double kd, double desired_gap);
+  void set_desired_gap(double gap);
   double update(double current_gap, double gap_rate);
   double update(double ref_velocity, double current_gap, double gap_rate);
 

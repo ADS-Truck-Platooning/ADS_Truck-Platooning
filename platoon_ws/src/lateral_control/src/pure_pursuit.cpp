@@ -55,7 +55,7 @@ std::optional<std::pair<double,double>> PurePursuit::getLookAheadPoint(
       return pt;
     }
   }
-  return std::nullopt;
+  return path[path.size()-1];
 }
 
 std::optional<double> PurePursuit::computeSteeringAngle(

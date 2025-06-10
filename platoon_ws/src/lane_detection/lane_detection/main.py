@@ -36,7 +36,7 @@ class LaneDetection(Node):
         # Pose Subscriber (앞차 위치)
         self.front_pose_sub = self.create_subscription(
             Pose,
-            f'/truck{self.truck_id}/front_pose',
+            f'/truck{self.truck_id}/front_truck_pose',
             self.front_pose_callback,
             10
         )
@@ -50,7 +50,7 @@ class LaneDetection(Node):
     def img_callback(self, msg):
         try:
             self.image = self.bridge.imgmsg_to_cv2(msg, "bgr8")
-            middle_points = self.image_processor.frame_processor(self.image)
+            middle_points = self.image_processor.frame_processor(self.image, self.truck_id)
 
             relative_points = []
             for point in middle_points:

@@ -63,7 +63,10 @@ private:
 
   rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr pub_throttle_;
   rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr pub_ref_vel_;
+  rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr pub_desired_gap_;
   rclcpp::TimerBase::SharedPtr timer_;
+
+  rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr parameter_callback_handle_;
 
   int truck_id_;
   double desired_velocity_;

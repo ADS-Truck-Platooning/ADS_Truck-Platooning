@@ -44,6 +44,26 @@ LongitudinalController::LongitudinalController(const rclcpp::NodeOptions & optio
     truck_id_ = this->get_parameter("truck_id").as_int();
     desired_velocity_ = this->get_parameter("desired_velocity").as_double();
 
+    parameter_callback_handle_ = this->add_on_set_parameters_callback(
+    [this](const std::vector<rclcpp::Parameter> & parameters) 
+    {
+      rcl_interfaces::msg::SetParametersResult result;
+      result.successful = true;
+
+      for (const auto & param : parameters) {
+        if (param.get_name() == "desired_gap") {
+          desired_gap_ = param.as_double();
+          gap_ctrl_.set_desired_gap(desired_gap_);
+          RCLCPP_INFO(this->get_logger(), "desired_gap updated: %f", desired_gap_);
+        } else if (param.get_name() == "desired_velocity") {
+          desired_velocity_ = param.as_double();
+          RCLCPP_INFO(this->get_logger(), "desired_velocity updated: %f", desired_velocity_);
+        }
+      }
+
+      return result;
+    });
+
     gap_ctrl_.param(gap_kp_, gap_kd_, desired_gap_);
     vel_ctrl_.param(vel_kp_, vel_ki_, k_aw_, throttle_limit_, ff_gain_);
 
@@ -81,6 +101,13 @@ LongitudinalController::LongitudinalController(const rclcpp::NodeOptions & optio
       const std::string ref_vel_topic_ = "/truck" + std::to_string(truck_id_) + "/reference_velocity";
       pub_ref_vel_ = create_publisher<std_msgs::msg::Float32>(
       ref_vel_topic_, 10);
+    }
+
+    if (truck_id_ == 1)
+    {
+      const std::string desired_gap_topic_ = "/desired_gap";
+      pub_desired_gap_ = create_publisher<std_msgs::msg::Float32>(
+      desired_gap_topic_, 10);
     }
 
     // Control loop timer (50 Hz) ---------------------------------------------
@@ -169,6 +196,13 @@ void LongitudinalController::timerCallback()
   std_msgs::msg::Float32 msg;
   msg.data = throttle_cmd;
   pub_throttle_->publish(msg);
+
+  if (truck_id_ == 1)
+  {
+    std_msgs::msg::Float32 msg;
+    msg.data = desired_gap_;
+    pub_desired_gap_->publish(msg);
+  }
 }
 
 }
