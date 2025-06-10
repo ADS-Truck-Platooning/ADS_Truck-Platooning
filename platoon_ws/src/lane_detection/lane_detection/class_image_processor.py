@@ -19,7 +19,7 @@ class ImageProcessor():
         self.prev_centers = None
         self.front_distance_m = None
 
-    def frame_processor(self, image):
+    def frame_processor(self, image, truck_id):
         # cv.imshow('Original Image', image)
 
         hsv = cv.cvtColor(image, cv.COLOR_BGR2HSV)
@@ -50,7 +50,7 @@ class ImageProcessor():
 
         centers, dbg = self.sliding_window_dual(warped_image, nwindows=16, draw=True)
         #if dbg is not None:
-        cv.imshow("Lane Debug", dbg)
+        # cv.imshow(f"Lane Debug {truck_id}", dbg)
 
         self.prev_centers = centers
 
@@ -62,7 +62,7 @@ class ImageProcessor():
             for x,y in pts_back:
                 cv.circle(gray, (int(x), int(y)), 4, (0,0,0), -1)
 
-            cv.imshow("Centers on Original", gray)
+            cv.imshow(f"Centers on Original {truck_id}", gray)
 
         cv.waitKey(1)
         return centers
@@ -95,7 +95,7 @@ class ImageProcessor():
 
         # ===== 앞차 거리 기반 ROI 계산 =====
         if self.front_distance_m is not None:
-            pixel_limit = int(self.front_distance_m * 45.3279) # 1m 당 45.329px
+            pixel_limit = int(self.front_distance_m * 61.6214)  # 1m 당 45.329px
             pixel_limit = min(pixel_limit, H)
         else:
             pixel_limit = H
