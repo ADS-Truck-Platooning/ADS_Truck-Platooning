@@ -19,6 +19,7 @@ def generate_nodes(context, *, num_trucks):
         node = Node(
             package='lane_detection',
             executable='lane_detection',
+            name=f'lane_detection_{i}',
             output='screen',
             # parameters=[ros_param_file],
             arguments=[
