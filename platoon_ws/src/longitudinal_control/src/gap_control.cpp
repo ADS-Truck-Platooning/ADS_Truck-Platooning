@@ -15,6 +15,11 @@ void GapController::param(double kp, double kd, double desired_gap)
   desired_gap_ = desired_gap;
 }
 
+void GapController::set_desired_gap(double gap) 
+{
+  desired_gap_ = gap;
+}
+
 double GapController::update(double current_gap, double gap_rate)
 {
   const double error      = current_gap - desired_gap_;   // d_des − d
