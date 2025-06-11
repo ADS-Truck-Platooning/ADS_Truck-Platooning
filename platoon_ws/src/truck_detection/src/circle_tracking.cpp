@@ -1,4 +1,5 @@
 #include "truck_detection/circle_tracking.hpp"
+#include <std_msgs/msg/bool.hpp>
 
 namespace truck_detection
 {
@@ -7,6 +8,7 @@ CircleTracking::CircleTracking(const rclcpp::NodeOptions & options)
 : rclcpp::Node("circle_tracking", options)
 {
   this->declare_parameter("truck_id", 0);
+  this->declare_parameter("stop_distance", 5.0);
   updateParameters();
 
   const std::string in_topic = "/truck" + std::to_string(truck_id_) + "/raw_obstacles";
@@ -16,11 +18,14 @@ CircleTracking::CircleTracking(const rclcpp::NodeOptions & options)
 
   const std::string out_topic = "/truck" + std::to_string(truck_id_) + "/front_truck_pose";
   pub_ = this->create_publisher<geometry_msgs::msg::Pose>(out_topic, 10);
+
+  emergency_pub_ = this->create_publisher<std_msgs::msg::Bool>("/emergency_stop", 10);
 }
 
 void CircleTracking::updateParameters()
 {
   truck_id_ = this->get_parameter("truck_id").as_int();
+  stop_distance_ = this->get_parameter("stop_distance").as_double();
 }
 
 void CircleTracking::obstaclesCallback(const obstacle_detector::msg::Obstacles::ConstSharedPtr & msg)
@@ -74,6 +79,13 @@ void CircleTracking::obstaclesCallback(const obstacle_detector::msg::Obstacles::
   pose_msg.orientation.w = 1.0;  // 단순 2D 위치이므로 단위 quaternion
 
   pub_->publish(pose_msg);
+
+  if (truck_id_ == 0 && distance <= stop_distance_)
+  {
+    std_msgs::msg::Bool stop_msg;
+    stop_msg.data = true;
+    emergency_pub_->publish(stop_msg);
+  }
 }
 
 }
