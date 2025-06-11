@@ -16,14 +16,14 @@ def generate_nodes(context, *, num_trucks):
             parameters=[
                 {'gap_kp': 0.5},
                 {'gap_kd': 0.1},
-                {'desired_gap': 8.0},
+                {'desired_gap': 5.0},
                 {'vel_kp': 0.8},
                 {'vel_ki': 2.0},
-                {'k_aw': 0.5},
+                {'k_aw': 0.25},
                 {'throttle_limit': 1.0},
                 {'ff_gain': 1.0},
                 {'truck_id': i},
-                {'desired_velocity': 5.0}
+                {'desired_velocity': 10.0}
             ]
         )
         nodes.append(node)

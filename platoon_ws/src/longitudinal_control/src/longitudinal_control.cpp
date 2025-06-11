@@ -169,7 +169,6 @@ void LongitudinalController::timerCallback()
     // desired_velocity_ = lead_velocity_ + vel_correction;
     const double vel_correction = gap_ctrl_.update(ref_velocity_, current_gap_, gap_rate_);
     desired_velocity_ = vel_correction;
-    RCLCPP_INFO(this->get_logger(), "desired_velocity: %f", desired_velocity_);
   }
 
   if (truck_id_ != 2)
@@ -202,6 +201,13 @@ void LongitudinalController::timerCallback()
     std_msgs::msg::Float32 msg;
     msg.data = desired_gap_;
     pub_desired_gap_->publish(msg);
+
+    RCLCPP_INFO(this->get_logger(), "reference_velocity: %f", ref_velocity_);
+    RCLCPP_INFO(this->get_logger(), "current_gap: %f", current_gap_);
+    RCLCPP_INFO(this->get_logger(), "gap_rate: %f", gap_rate_);
+    RCLCPP_INFO(this->get_logger(), "desired_velocity: %f", desired_velocity_);
+    RCLCPP_INFO(this->get_logger(), "ego_velocity: %f", ego_velocity_);
+    RCLCPP_INFO(this->get_logger(), "throttle_u: %f", throttle_u);
   }
 }
 

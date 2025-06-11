@@ -41,7 +41,10 @@ std::optional<std::size_t> PurePursuit::getNearestIndex(
 std::optional<std::pair<double,double>> PurePursuit::getLookAheadPoint(
     const std::vector<std::pair<double,double>>& path,
     double x, double y,
-    double look_ahead_dist)
+    double look_ahead_dist,
+    int truck_id,
+    double lead_x,
+    double lead_y)
 {
   if (path.empty()) return std::nullopt;
 
@@ -55,13 +58,22 @@ std::optional<std::pair<double,double>> PurePursuit::getLookAheadPoint(
       return pt;
     }
   }
-  return path[path.size()-1];
+
+  // if (truck_id == 0)
+  //   return path.back();
+  // else
+  //   return std::make_pair(lead_x, lead_y);
+
+  return path.back();
 }
 
 std::optional<double> PurePursuit::computeSteeringAngle(
     const std::vector<std::pair<double, double>>& path,
     const std::pair<double, double>& current_pos,
     double current_yaw,
+    int truck_id,
+    double lead_x,
+    double lead_y,
     double look_ahead_dist,
     double wheel_base)
 {
@@ -76,7 +88,10 @@ std::optional<double> PurePursuit::computeSteeringAngle(
   const auto lap = getLookAheadPoint(path,
                                      current_pos.first,
                                      current_pos.second,
-                                     look_ahead_dist);
+                                     look_ahead_dist,
+                                     truck_id,
+                                     lead_x,
+                                     lead_y);
 
   if (!lap) 
   {
