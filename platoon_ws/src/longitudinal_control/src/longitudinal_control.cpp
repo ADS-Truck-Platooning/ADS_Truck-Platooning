@@ -19,7 +19,8 @@ LongitudinalController::LongitudinalController(const rclcpp::NodeOptions & optio
   ref_velocity_(0.0),
   prev_time_(this->get_clock()->now()),
   truck_id_(0),
-  desired_velocity_(0.0)
+  desired_velocity_(0.0),
+  emergency_stop_(false)
 {
     this->declare_parameter("gap_kp", 0.8);
     this->declare_parameter("gap_kd", 0.4);
@@ -91,6 +92,11 @@ LongitudinalController::LongitudinalController(const rclcpp::NodeOptions & optio
     ego_vel_topic_, 10,
     std::bind(&LongitudinalController::egoVelocityCallback, this, std::placeholders::_1));
 
+    const std::string emer_stop_topic_ = "/emergency_stop";
+    sub_emer_stop_ = create_subscription<std_msgs::msg::Bool>(
+    emer_stop_topic_, 10,
+    std::bind(&LongitudinalController::emerStopCallback, this, std::placeholders::_1));
+
     // Publisher ---------------------------------------------------------------
     const std::string throttle_topic_ = "/truck" + std::to_string(truck_id_) + "/throttle_control";
     pub_throttle_ = create_publisher<std_msgs::msg::Float32>(
@@ -147,6 +153,12 @@ void LongitudinalController::egoVelocityCallback(
   ego_velocity_ = msg->data;
 }
 
+void LongitudinalController::emerStopCallback(
+  const std_msgs::msg::Bool::SharedPtr msg)
+{
+  emergency_stop_ = msg->data;
+}
+
 void LongitudinalController::timerCallback()
 {
   // --- Time step -----------------------------------------------------------
@@ -191,7 +203,10 @@ void LongitudinalController::timerCallback()
   {
     throttle_u  = vel_ctrl_.update(desired_velocity_, ego_velocity_, dt);
   }  
-  const double throttle_cmd= std::clamp(throttle_u, 0.0, throttle_limit_);
+  double throttle_cmd= std::clamp(throttle_u, 0.0, throttle_limit_);
+
+  if (emergency_stop_)
+    throttle_cmd = -1.0;
 
   std_msgs::msg::Float32 msg;
   msg.data = throttle_cmd;
