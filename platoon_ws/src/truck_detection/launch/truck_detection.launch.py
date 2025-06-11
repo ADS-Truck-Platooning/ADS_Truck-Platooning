@@ -16,7 +16,7 @@ def generate_nodes(context, num_trucks):
                 name=f"circle_tracking_{i}",
                 output="screen",
                 parameters=[{"truck_id": i},
-                            {"stop_distance": 7.5}],
+                            {"braking_decel": 2.25}]
             )
         )
 
