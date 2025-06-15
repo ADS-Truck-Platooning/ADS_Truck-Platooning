@@ -17,8 +17,12 @@ public:
       const std::vector<std::pair<double, double>>& path,
       const std::pair<double, double>& current_pos,
       double current_yaw,
-      double look_ahead_dist = -1.0,
-      double wheel_base      = -1.0);
+      int truck_id,
+      double lead_x,
+      double lead_y,
+      bool camera_on,
+      double wheel_base      = -1.0,
+      double look_ahead_dist = -1.0);
 
   std::optional<std::pair<double, double>> lastLookAheadPoint() const
   { return look_ahead_point_; }
@@ -31,7 +35,11 @@ private:
   static std::optional<std::pair<double,double>> getLookAheadPoint(
       const std::vector<std::pair<double,double>>& path,
       double x, double y,
-      double look_ahead_dist);
+      double look_ahead_dist,
+      int truck_id,
+      double lead_x,
+      double lead_y,
+      bool camera_on);
 
   double look_ahead_dist_;
   double wheel_base_;
