@@ -7,7 +7,7 @@ from launch_ros.actions import Node
 def generate_nodes(context, num_trucks):
     nodes = []
 
-    for i in range(1, int(num_trucks)):
+    for i in range(int(num_trucks)):
         # ── circle_tracking_node
         nodes.append(
             Node(
@@ -15,7 +15,8 @@ def generate_nodes(context, num_trucks):
                 executable="circle_tracking_node",
                 name=f"circle_tracking_{i}",
                 output="screen",
-                parameters=[{"truck_id": i}],
+                parameters=[{"truck_id": i},
+                            {"braking_decel": 2.25}]
             )
         )
 

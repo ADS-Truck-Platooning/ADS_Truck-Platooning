@@ -26,6 +26,7 @@ private:
   void egoVelocityCallback(const std_msgs::msg::Float32::SharedPtr msg);
   void egoPoseCallback(const geometry_msgs::msg::Pose::SharedPtr msg);
   void cameraOnCallback(const std_msgs::msg::Bool::SharedPtr msg);
+  void emerStopCallback(const std_msgs::msg::Bool::SharedPtr msg);
   void timerCallback();
 
   // --- Controllers ----------------------------------------------------------
@@ -56,6 +57,7 @@ private:
   double lead_velocity_;
   double ego_velocity_;
   double ref_velocity_;
+  bool emergency_stop_;
   rclcpp::Time prev_time_;
 
   // --- ROS entities ---------------------------------------------------------
@@ -64,6 +66,7 @@ private:
   rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr sub_ego_vel_;
   rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr sub_ref_vel_;
   rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr sub_camera_on_;
+  rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr sub_emer_stop_;
 
   rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr pub_throttle_;
   rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr pub_ref_vel_;
