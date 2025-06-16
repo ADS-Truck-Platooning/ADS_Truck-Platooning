@@ -48,7 +48,7 @@ class ImageProcessor():
         # cv.imshow('Warp Image', warped_image)
 
 
-        centers, dbg = self.sliding_window_dual(warped_image, nwindows=16, draw=True)
+        centers, dbg = self.sliding_window_dual(warped_image, nwindows=16, draw=True, truck_id=truck_id)
         #if dbg is not None:
         # cv.imshow(f"Lane Debug {truck_id}", dbg)
 
@@ -60,9 +60,9 @@ class ImageProcessor():
             pts_back = pts_back.reshape(-1,2)
 
             for x,y in pts_back:
-                cv.circle(gray, (int(x), int(y)), 4, (0,0,0), -1)
+                cv.circle(image, (int(x), int(y)), 4, (0,0,0), -1)
 
-            cv.imshow(f"Centers on Original {truck_id}", gray)
+            cv.imshow(f"Centers on Original {truck_id}", image)
 
         cv.waitKey(1)
         return centers
@@ -78,7 +78,7 @@ class ImageProcessor():
         return transformed_frame, matrix
 
     def sliding_window_dual(self, binary_warped, nwindows=15, margin=70, minpix=300,
-                        draw=False):
+                        draw=False, truck_id=0):
         """
         좌·우 차선을 동시에 찾는 슬라이딩 윈도우
         -----------------------------------------------------------
@@ -94,7 +94,7 @@ class ImageProcessor():
         H, W = binary_warped.shape # 480, 640
 
         # ===== 앞차 거리 기반 ROI 계산 =====
-        if self.front_distance_m is not None:
+        if self.front_distance_m is not None and truck_id != 0:
             pixel_limit = int(self.front_distance_m * 61.6214)  # 1m 당 45.329px
             pixel_limit = min(pixel_limit, H)
         else:
