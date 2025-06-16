@@ -26,7 +26,6 @@ private:
   void egoVelocityCallback(const std_msgs::msg::Float32::SharedPtr msg);
   void egoPoseCallback(const geometry_msgs::msg::Pose::SharedPtr msg);
   void cameraOnCallback(const std_msgs::msg::Bool::SharedPtr msg);
-  void emerStopCallback(const std_msgs::msg::Bool::SharedPtr msg);
   void timerCallback();
 
   // --- Controllers ----------------------------------------------------------
@@ -44,6 +43,7 @@ private:
   double ff_gain_;
 
   double dec_rate_;
+  double braking_decel_;
 
   // --- State variables ------------------------------------------------------
   double lead_x_;
@@ -66,11 +66,11 @@ private:
   rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr sub_ego_vel_;
   rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr sub_ref_vel_;
   rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr sub_camera_on_;
-  rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr sub_emer_stop_;
 
   rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr pub_throttle_;
   rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr pub_ref_vel_;
   rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr pub_desired_gap_;
+  rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr pub_emer_stop_;
   rclcpp::TimerBase::SharedPtr timer_;
 
   rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr parameter_callback_handle_;

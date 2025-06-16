@@ -1,5 +1,6 @@
 #include "longitudinal_control/longitudinal_control.hpp"
 #include <chrono>
+#include <algorithm>
 
 namespace longitudinal_control
 {
@@ -20,7 +21,8 @@ LongitudinalController::LongitudinalController(const rclcpp::NodeOptions & optio
   prev_time_(this->get_clock()->now()),
   truck_id_(0),
   desired_velocity_(0.0),
-  emergency_stop_(false)
+  emergency_stop_(false),
+  braking_decel_(6.0)
 {
     this->declare_parameter("gap_kp", 0.8);
     this->declare_parameter("gap_kd", 0.4);
@@ -43,9 +45,11 @@ LongitudinalController::LongitudinalController(const rclcpp::NodeOptions & optio
     this->declare_parameter("truck_id", 0);
     this->declare_parameter("desired_velocity", 36.0);
     this->declare_parameter("velocity_decay_rate", 1.0);
+    this->declare_parameter("braking_decel", 6.0);
     truck_id_ = this->get_parameter("truck_id").as_int();
     desired_velocity_ = this->get_parameter("desired_velocity").as_double();
     dec_rate_ = this->get_parameter("velocity_decay_rate").as_double();
+    braking_decel_ = this->get_parameter("braking_decel").as_double();
 
     parameter_callback_handle_ = this->add_on_set_parameters_callback(
     [this](const std::vector<rclcpp::Parameter> & parameters) 
@@ -101,9 +105,8 @@ LongitudinalController::LongitudinalController(const rclcpp::NodeOptions & optio
     std::bind(&LongitudinalController::egoVelocityCallback, this, std::placeholders::_1));
 
     const std::string emer_stop_topic_ = "/emergency_stop";
-    sub_emer_stop_ = create_subscription<std_msgs::msg::Bool>(
-    emer_stop_topic_, 10,
-    std::bind(&LongitudinalController::emerStopCallback, this, std::placeholders::_1));
+    pub_emer_stop_ = create_publisher<std_msgs::msg::Bool>(
+    emer_stop_topic_, 10);
 
     // Publisher ---------------------------------------------------------------
     const std::string throttle_topic_ = "/truck" + std::to_string(truck_id_) + "/throttle_control";
@@ -167,12 +170,6 @@ void LongitudinalController::cameraOnCallback(
   camera_on_ = msg->data;
 }
 
-void LongitudinalController::emerStopCallback(
-  const std_msgs::msg::Bool::SharedPtr msg)
-{
-  emergency_stop_ = msg->data;
-}
-
 void LongitudinalController::timerCallback()
 {
   // --- Time step -----------------------------------------------------------
@@ -187,6 +184,23 @@ void LongitudinalController::timerCallback()
   prev_lead_y_ = lead_y_;
   gap_rate_ = (current_gap_ - prev_gap_) / dt;
   prev_gap_ = current_gap_;
+
+  if (truck_id_ == 0)
+  {
+    const double safe_distance = (ego_velocity_ * ego_velocity_) /
+                                 (2.0 * std::max(braking_decel_, 0.1));
+    emergency_stop_ = current_gap_ <= safe_distance;
+    RCLCPP_INFO(this->get_logger(),
+                "safe_distance %.2f — emergency %d",
+                safe_distance, emergency_stop_);
+
+    if (emergency_stop_)
+    {
+      std_msgs::msg::Bool stop_msg;
+      stop_msg.data = true;
+      pub_emer_stop_->publish(stop_msg);
+    }
+  }
 
   // --- Layer 1: PD gap -> desired velocity --------------------------------
   if (truck_id_ != 0)
