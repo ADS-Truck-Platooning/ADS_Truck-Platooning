@@ -41,8 +41,16 @@ std::optional<std::size_t> PurePursuit::getNearestIndex(
 std::optional<std::pair<double,double>> PurePursuit::getLookAheadPoint(
     const std::vector<std::pair<double,double>>& path,
     double x, double y,
-    double look_ahead_dist)
+    double look_ahead_dist,
+    int truck_id,
+    double lead_x,
+    double lead_y,
+    bool camera_on
+    )
 {
+  if (!camera_on)
+    return std::make_pair(lead_x, lead_y);
+  
   if (path.empty()) return std::nullopt;
 
   for (const auto& pt : path) 
@@ -55,17 +63,22 @@ std::optional<std::pair<double,double>> PurePursuit::getLookAheadPoint(
       return pt;
     }
   }
-  return path[path.size()-1];
+
+  return path.back();
 }
 
 std::optional<double> PurePursuit::computeSteeringAngle(
     const std::vector<std::pair<double, double>>& path,
     const std::pair<double, double>& current_pos,
     double current_yaw,
+    int truck_id,
+    double lead_x,
+    double lead_y,
+    bool camera_on,
     double look_ahead_dist,
     double wheel_base)
 {
-  if (path.empty()) {
+  if (path.empty() && camera_on) {
     look_ahead_point_.reset();
     return std::nullopt;
   }
@@ -76,7 +89,11 @@ std::optional<double> PurePursuit::computeSteeringAngle(
   const auto lap = getLookAheadPoint(path,
                                      current_pos.first,
                                      current_pos.second,
-                                     look_ahead_dist);
+                                     look_ahead_dist,
+                                     truck_id,
+                                     lead_x,
+                                     lead_y,
+                                     camera_on);
 
   if (!lap) 
   {
@@ -93,10 +110,20 @@ std::optional<double> PurePursuit::computeSteeringAngle(
                                       lx - current_pos.first);
 
   double heading_error = normalizeAngle(angle_to_target - current_yaw);
-
-  double steering_angle = std::atan2(
+  
+  double steering_angle;
+  if (camera_on)
+  {
+    steering_angle = std::atan2(
       2.0 * wheel_base * std::sin(heading_error),
       look_ahead_dist);
+  }
+  else
+  {
+    steering_angle = std::atan2(
+      2.0 * wheel_base * std::sin(heading_error),
+      std::sqrt(lead_x*lead_x + lead_y*lead_y));
+  }
 
   return steering_angle;
 }

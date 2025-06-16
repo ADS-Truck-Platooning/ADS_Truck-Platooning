@@ -7,8 +7,7 @@
 #include "geometry_msgs/msg/twist_stamped.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "std_msgs/msg/float32.hpp"
-#include "std_msgs/msg/float32.hpp"
-#include <std_msgs/msg/bool.hpp>
+#include "std_msgs/msg/bool.hpp"
 
 
 namespace longitudinal_control
@@ -26,6 +25,7 @@ private:
   void leadPoseCallback(const geometry_msgs::msg::Pose::SharedPtr msg);
   void egoVelocityCallback(const std_msgs::msg::Float32::SharedPtr msg);
   void egoPoseCallback(const geometry_msgs::msg::Pose::SharedPtr msg);
+  void cameraOnCallback(const std_msgs::msg::Bool::SharedPtr msg);
   void emerStopCallback(const std_msgs::msg::Bool::SharedPtr msg);
   void timerCallback();
 
@@ -42,6 +42,8 @@ private:
   double k_aw_;
   double throttle_limit_;
   double ff_gain_;
+
+  double dec_rate_;
 
   // --- State variables ------------------------------------------------------
   double lead_x_;
@@ -63,6 +65,7 @@ private:
   rclcpp::Subscription<geometry_msgs::msg::Pose>::SharedPtr  sub_lead_pose_;
   rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr sub_ego_vel_;
   rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr sub_ref_vel_;
+  rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr sub_camera_on_;
   rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr sub_emer_stop_;
 
   rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr pub_throttle_;
@@ -74,6 +77,7 @@ private:
 
   int truck_id_;
   double desired_velocity_;
+  bool camera_on_{true};
 };
 
 } // namespace longitudinal_control

@@ -42,8 +42,10 @@ LongitudinalController::LongitudinalController(const rclcpp::NodeOptions & optio
 
     this->declare_parameter("truck_id", 0);
     this->declare_parameter("desired_velocity", 36.0);
+    this->declare_parameter("velocity_decay_rate", 1.0);
     truck_id_ = this->get_parameter("truck_id").as_int();
     desired_velocity_ = this->get_parameter("desired_velocity").as_double();
+    dec_rate_ = this->get_parameter("velocity_decay_rate").as_double();
 
     parameter_callback_handle_ = this->add_on_set_parameters_callback(
     [this](const std::vector<rclcpp::Parameter> & parameters) 
@@ -85,6 +87,12 @@ LongitudinalController::LongitudinalController(const rclcpp::NodeOptions & optio
       sub_ref_vel_ = create_subscription<std_msgs::msg::Float32>(
       ref_vel_topic_, 10,
       std::bind(&LongitudinalController::refVelocityCallback, this, std::placeholders::_1));
+    }
+    else
+    {
+      sub_camera_on_ = create_subscription<std_msgs::msg::Bool>(
+        "/truck1/camera_on", 10,
+        std::bind(&LongitudinalController::cameraOnCallback, this, std::placeholders::_1));
     }
     
     const std::string ego_vel_topic_ = "/truck" + std::to_string(truck_id_) + "/velocity";
@@ -153,6 +161,12 @@ void LongitudinalController::egoVelocityCallback(
   ego_velocity_ = msg->data;
 }
 
+void LongitudinalController::cameraOnCallback(
+  const std_msgs::msg::Bool::SharedPtr msg)
+{
+  camera_on_ = msg->data;
+}
+
 void LongitudinalController::emerStopCallback(
   const std_msgs::msg::Bool::SharedPtr msg)
 {
@@ -184,6 +198,11 @@ void LongitudinalController::timerCallback()
     RCLCPP_INFO(this->get_logger(), "desired_velocity: %f", desired_velocity_);
   }
 
+  if (truck_id_ == 0 && !camera_on_) 
+  {
+    desired_velocity_ = std::max(0.0, desired_velocity_ - dec_rate_ * dt);
+  }
+
   if (truck_id_ != 2)
   {
     std_msgs::msg::Float32 msg;
@@ -202,11 +221,21 @@ void LongitudinalController::timerCallback()
   else
   {
     throttle_u  = vel_ctrl_.update(desired_velocity_, ego_velocity_, dt);
-  }  
-  double throttle_cmd= std::clamp(throttle_u, 0.0, throttle_limit_);
+  }
 
-  if (emergency_stop_)
+  double throttle_cmd;
+  if (truck_id_ == 0 && !camera_on_ && desired_velocity_ <= 0.1) 
+  {
     throttle_cmd = -1.0;
+  }
+  else if (emergency_stop_)
+  {
+    throttle_cmd = -1.0;
+  }
+  else 
+  {
+    throttle_cmd = std::clamp(throttle_u, 0.0, throttle_limit_);
+  }
 
   std_msgs::msg::Float32 msg;
   msg.data = throttle_cmd;
@@ -217,6 +246,13 @@ void LongitudinalController::timerCallback()
     std_msgs::msg::Float32 msg;
     msg.data = desired_gap_;
     pub_desired_gap_->publish(msg);
+
+    RCLCPP_INFO(this->get_logger(), "reference_velocity: %f", ref_velocity_);
+    RCLCPP_INFO(this->get_logger(), "current_gap: %f", current_gap_);
+    RCLCPP_INFO(this->get_logger(), "gap_rate: %f", gap_rate_);
+    RCLCPP_INFO(this->get_logger(), "desired_velocity: %f", desired_velocity_);
+    RCLCPP_INFO(this->get_logger(), "ego_velocity: %f", ego_velocity_);
+    RCLCPP_INFO(this->get_logger(), "throttle_u: %f", throttle_u);
   }
 }
 

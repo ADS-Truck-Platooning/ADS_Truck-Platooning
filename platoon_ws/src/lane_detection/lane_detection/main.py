@@ -7,12 +7,14 @@ from sensor_msgs.msg import Image
 
 import rclpy
 from rclpy.node import Node
+from rcl_interfaces.msg import SetParametersResult
 from cv_bridge import CvBridge, CvBridgeError
 from rclpy.qos import qos_profile_sensor_data
 import argparse
 
 from nav_msgs.msg import Path
 from geometry_msgs.msg import PoseStamped, Quaternion, Pose
+from std_msgs.msg import Bool
 import math
 
 import cv2
@@ -47,18 +49,29 @@ class LaneDetection(Node):
         self.bridge = CvBridge()
         self.image = None
 
+        self.declare_parameter("camera_on", True)
+        self.add_on_set_parameters_callback(self.parameter_callback)
+        self.camera_on = self.get_parameter("camera_on").get_parameter_value().bool_value
+        self.camera_on_pub = self.create_publisher(Bool, f"/truck{self.truck_id}/camera_on", 10)
+
     def img_callback(self, msg):
         try:
+            relative_points = []
+
+            if not self.camera_on:
+                return
+
             self.image = self.bridge.imgmsg_to_cv2(msg, "bgr8")
             middle_points = self.image_processor.frame_processor(self.image, self.truck_id)
 
-            relative_points = []
             for point in middle_points:
                 relative_points.append(convert_pixel_to_world(*point))            
-            self.publish_path(relative_points)
 
         except CvBridgeError as e:
             print(e)
+
+        finally:
+            self.publish_path(relative_points)
 
     def front_pose_callback(self, msg: Pose):
         try:
@@ -67,6 +80,18 @@ class LaneDetection(Node):
         except Exception as e:
             self.get_logger().warn(f"Pose 처리 실패: {e}")
 
+    def parameter_callback(self, params):
+        for param in params:
+            if param.name == "camera_on":
+                self.camera_on = param.value
+                self.get_logger().info(f"camera_on set to {self.camera_on}")
+                self.publish_camera_on_status()
+        return SetParametersResult(successful=True)
+
+    def publish_camera_on_status(self):
+        msg = Bool()
+        msg.data = self.camera_on
+        self.camera_on_pub.publish(msg)
     
     def publish_path(self, relative_points):
         path_msg = Path()
