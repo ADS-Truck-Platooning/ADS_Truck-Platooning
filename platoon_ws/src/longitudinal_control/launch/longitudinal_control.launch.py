@@ -19,7 +19,7 @@ def generate_nodes(context, *, num_trucks):
                 {'desired_gap': 8.0},
                 {'vel_kp': 0.8},
                 {'vel_ki': 2.0},
-                {'k_aw': 0.5},
+                {'k_aw': 0.25},
                 {'throttle_limit': 1.0},
                 {'ff_gain': 1.0},
                 {'truck_id': i},
