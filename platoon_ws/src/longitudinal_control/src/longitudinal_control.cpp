@@ -88,12 +88,10 @@ LongitudinalController::LongitudinalController(const rclcpp::NodeOptions & optio
       ref_vel_topic_, 10,
       std::bind(&LongitudinalController::refVelocityCallback, this, std::placeholders::_1));
     }
-    else
-    {
-      sub_camera_on_ = create_subscription<std_msgs::msg::Bool>(
-        "/truck1/camera_on", 10,
-        std::bind(&LongitudinalController::cameraOnCallback, this, std::placeholders::_1));
-    }
+
+    sub_camera_on_ = create_subscription<std_msgs::msg::Bool>(
+      "/truck1/camera_on", 10,
+      std::bind(&LongitudinalController::cameraOnCallback, this, std::placeholders::_1));
     
     const std::string ego_vel_topic_ = "/truck" + std::to_string(truck_id_) + "/velocity";
     sub_ego_vel_ = create_subscription<std_msgs::msg::Float32>(
@@ -224,7 +222,7 @@ void LongitudinalController::timerCallback()
   }
 
   double throttle_cmd;
-  if (truck_id_ == 0 && !camera_on_ && desired_velocity_ <= 0.1) 
+  if (!camera_on_ && desired_velocity_ <= 0.1) 
   {
     throttle_cmd = -1.0;
   }
