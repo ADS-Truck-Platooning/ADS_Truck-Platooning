@@ -57,11 +57,11 @@ class LaneDetection(Node):
     def img_callback(self, msg):
         try:
             relative_points = []
+            self.image = self.bridge.imgmsg_to_cv2(msg, "bgr8")
 
             if not self.camera_on:
                 return
 
-            self.image = self.bridge.imgmsg_to_cv2(msg, "bgr8")
             middle_points = self.image_processor.frame_processor(self.image, self.truck_id)
 
             for point in middle_points:
@@ -77,6 +77,18 @@ class LaneDetection(Node):
         try:
             distance_m = msg.position.x
             self.image_processor.front_distance_m = distance_m
+
+            if self.truck_id == 1 and not self.camera_on and self.image is not None:
+                try:
+                    pixel_point = convert_world_to_pixel(msg.position.x, msg.position.y, Z=1.5)
+                    if pixel_point is not None:
+                        u, v = int(pixel_point[0]), int(pixel_point[1])
+                        cv2.circle(self.image, (u, v), 5, (0, 0, 255), -1)
+                        cv2.imshow(f"Camera Off Mode (Set Front Truck Position as LAP)", self.image)
+                        cv2.waitKey(1)
+                except Exception as e:
+                    self.get_logger().warn(f"픽셀 변환 또는 표시 실패: {e}")
+
         except Exception as e:
             self.get_logger().warn(f"Pose 처리 실패: {e}")
 
