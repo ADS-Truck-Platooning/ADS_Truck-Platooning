@@ -23,7 +23,7 @@ def generate_nodes(context, *, num_trucks):
                 {'throttle_limit': 1.0},
                 {'ff_gain': 1.0},
                 {'truck_id': i},
-                {'desired_velocity': 5.0}
+                {'desired_velocity': 10.0}
             ]
         )
         nodes.append(node)

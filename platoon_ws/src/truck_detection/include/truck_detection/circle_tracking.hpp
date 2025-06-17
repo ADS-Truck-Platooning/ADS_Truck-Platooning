@@ -30,6 +30,8 @@ private:
   double braking_decel_;
   double ego_velocity_;
   bool emergency_stop_;
+  double safe_distance_;
+  bool emergency_triggered_;
   
   void obstaclesCallback(const obstacle_detector::msg::Obstacles::ConstSharedPtr & msg);
   void velocityCallback(const std_msgs::msg::Float32::SharedPtr msg);

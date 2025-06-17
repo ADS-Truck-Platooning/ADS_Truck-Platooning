@@ -12,11 +12,11 @@ LateralControlNode::LateralControlNode()
   /* Parameters */
   this->declare_parameter<int>("truck_id", 0);
   truck_id_ = this->get_parameter("truck_id").as_int();
-  RCLCPP_INFO(this->get_logger(), "Truck ID: %d", truck_id_);
+  // RCLCPP_INFO(this->get_logger(), "Truck ID: %d", truck_id_);
 
   this->declare_parameter<double>("look_ahead_distance", 20.0);
   look_ahead_distance_ = this->get_parameter("look_ahead_distance").as_double();
-  RCLCPP_INFO(this->get_logger(), "Look Ahead Distance: %f", look_ahead_distance_);
+  // RCLCPP_INFO(this->get_logger(), "Look Ahead Distance: %f", look_ahead_distance_);
 
   /* Subscribers */
   const std::string path_topic = "/platoon/truck" + std::to_string(truck_id_) + "/path";

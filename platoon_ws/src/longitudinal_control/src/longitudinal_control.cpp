@@ -55,10 +55,10 @@ LongitudinalController::LongitudinalController(const rclcpp::NodeOptions & optio
         if (param.get_name() == "desired_gap") {
           desired_gap_ = param.as_double();
           gap_ctrl_.set_desired_gap(desired_gap_);
-          RCLCPP_INFO(this->get_logger(), "desired_gap updated: %f", desired_gap_);
+          // RCLCPP_INFO(this->get_logger(), "desired_gap updated: %f", desired_gap_);
         } else if (param.get_name() == "desired_velocity") {
           desired_velocity_ = param.as_double();
-          RCLCPP_INFO(this->get_logger(), "desired_velocity updated: %f", desired_velocity_);
+          // RCLCPP_INFO(this->get_logger(), "desired_velocity updated: %f", desired_velocity_);
         }
       }
 
@@ -181,7 +181,7 @@ void LongitudinalController::timerCallback()
     // desired_velocity_ = lead_velocity_ + vel_correction;
     const double vel_correction = gap_ctrl_.update(ref_velocity_, current_gap_, gap_rate_);
     desired_velocity_ = vel_correction;
-    RCLCPP_INFO(this->get_logger(), "desired_velocity: %f", desired_velocity_);
+    // RCLCPP_INFO(this->get_logger(), "desired_velocity: %f", desired_velocity_);
   }
 
   if (truck_id_ != 2)

@@ -51,6 +51,7 @@ class ImageProcessor():
         centers, dbg = self.sliding_window_dual(warped_image, nwindows=16, draw=True)
         #if dbg is not None:
         # cv.imshow(f"Lane Debug {truck_id}", dbg)
+        # cv.imshow(f"Lane Debug", dbg)
 
         self.prev_centers = centers
 
@@ -61,8 +62,12 @@ class ImageProcessor():
 
             for x,y in pts_back:
                 cv.circle(gray, (int(x), int(y)), 4, (0,0,0), -1)
-
-            cv.imshow(f"Centers on Original {truck_id}", gray)
+            if truck_id ==0:
+                cv.imshow(f"Lead Vehicle", gray)
+            elif truck_id ==1:
+                cv.imshow(f"Following Vehicle 1", gray)
+            elif truck_id ==2:
+                cv.imshow(f"Following Vehicle 2", gray)
 
         cv.waitKey(1)
         return centers
@@ -146,8 +151,6 @@ class ImageProcessor():
 
             left_inds.append(good_left)
             right_inds.append(good_right)
-            print("left: ",good_left.size, "minpix: ", minpix)
-            # print("right: ",good_right.size, "minpix: ", minpix)
 
             # 픽셀 수 충분하면 윈도우 중심 이동
             if good_left.size  > minpix:  leftx_cur  = int(np.mean(nz_x[good_left]))
@@ -162,13 +165,10 @@ class ImageProcessor():
             param = 200
             if good_left.size > minpix and good_right.size > minpix:
                 center_x = (leftx_cur + rightx_cur) // 2
-                # print("all good")
             elif good_left.size  > minpix:
                 center_x = leftx_cur + param
-                # print("left good")
             elif good_right.size > minpix:
                 center_x = rightx_cur - param
-                # print("right good")
             elif self.prev_centers is not None and len(self.prev_centers) > window:
                 center_x = self.prev_centers[window][0]
             else:
@@ -240,8 +240,6 @@ class ImageProcessor():
         if n_sample is None:
             y_out = ys                               # 원래 개수
         else:
-            # y_out = np.linspace(ys.min(), ys.max(), n_sample)
-            # print(ys.min(), ys.max())
             y_out = np.linspace(0, 640, n_sample)
 
         x_out = np.polyval(coeff, y_out)

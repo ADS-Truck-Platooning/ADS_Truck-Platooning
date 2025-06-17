@@ -1,5 +1,6 @@
 #include "truck_detection/circle_tracking.hpp"
 #include <std_msgs/msg/bool.hpp>
+#include <iomanip>
 
 namespace truck_detection
 {
@@ -8,7 +9,9 @@ CircleTracking::CircleTracking(const rclcpp::NodeOptions & options)
 : rclcpp::Node("circle_tracking", options),
   braking_decel_(9.0),
   ego_velocity_(0.0),
-  emergency_stop_(false)
+  emergency_stop_(false),
+  safe_distance_(0.0),
+  emergency_triggered_(false)
 {
   this->declare_parameter("truck_id", 0);
   this->declare_parameter("braking_decel", 6.0);
@@ -49,9 +52,9 @@ void CircleTracking::obstaclesCallback(const obstacle_detector::msg::Obstacles::
 
     // pub_->publish(pose_msg);
 
-    RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 2000,
-                         "No circles detected – publishing NaN pose");
-    // return;
+    // RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 2000,
+    //                      "No circles detected – publishing NaN pose");
+    return;
   }
   
   // 첫 번째 원을 초기값으로 설정
@@ -76,24 +79,45 @@ void CircleTracking::obstaclesCallback(const obstacle_detector::msg::Obstacles::
   double y = closest_circle->center.y;
   double distance = std::sqrt(min_dist_sq);
 
-  RCLCPP_INFO(this->get_logger(),
-              "Closest circle at (%.2f, %.2f) — distance %.2f m",
-              x, y, distance);
+  // RCLCPP_INFO(this->get_logger(),
+  //             "Closest circle at (%.2f, %.2f) — distance %.2f m",
+  //             x, y, distance);
 
   if (truck_id_ == 0)
   {
-    const double safe_distance = (ego_velocity_ * ego_velocity_) /
+    if (!emergency_triggered_)
+    {
+      safe_distance_ = (ego_velocity_ * ego_velocity_) /
                                (2.0 * std::max(braking_decel_, 0.1));
-    emergency_stop_ = distance <= safe_distance;
-    RCLCPP_INFO(this->get_logger(),
-                "safe_distance %.2f — emergency %d",
-                safe_distance, emergency_stop_);
+    }
 
-    if (emergency_stop_)
+    emergency_stop_ = distance <= safe_distance_;
+    if (!emergency_stop_)
+    {
+      RCLCPP_INFO(this->get_logger(),
+            "[Emergency Check] Distance: %.2f m, Safe_Distance: %.2f m",
+            distance, safe_distance_);
+    }
+
+    if (emergency_stop_ && !emergency_triggered_)
     {
       std_msgs::msg::Bool stop_msg;
       stop_msg.data = true;
       emergency_pub_->publish(stop_msg);
+      emergency_triggered_ = true;
+      RCLCPP_INFO(this->get_logger(),"\n##########Emergency System Activated##########");
+      RCLCPP_INFO(this->get_logger(),"\n##########Emergency System Activated##########");
+      RCLCPP_INFO(this->get_logger(),"\n##########Emergency System Activated##########");
+      RCLCPP_INFO(this->get_logger(),"\n##########Emergency System Activated##########");
+      RCLCPP_INFO(this->get_logger(),"\n##########Emergency System Activated##########");
+      RCLCPP_INFO(this->get_logger(),"\n##########Emergency System Activated##########");
+      RCLCPP_INFO(this->get_logger(),"\n##########Emergency System Activated##########");
+      RCLCPP_INFO(this->get_logger(),"\n##########Emergency System Activated##########");
+      RCLCPP_INFO(this->get_logger(),"\n##########Emergency System Activated##########");
+      RCLCPP_INFO(this->get_logger(),"\n##########Emergency System Activated##########");
+      RCLCPP_INFO(this->get_logger(),"\n##########Emergency System Activated##########");
+      RCLCPP_INFO(this->get_logger(),"\n##########Emergency System Activated##########");
+      // std::cout << "\n##########Emergency System Activated##########" << std::endl;
     }
   }
 
