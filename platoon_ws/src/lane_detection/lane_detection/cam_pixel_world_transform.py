@@ -35,7 +35,7 @@ def convert_pixel_to_world(u, v, cx=320, cy=240, fov_x=90.0, x=2.3, y=0.0, z=3.5
     coordinate = (tuple(pixel_to_world(u, v)[0:2]))
     return coordinate
 
-def convert_world_to_pixel(X, Y, cx=320, cy=240, fov_x=90.0, x=2.3, y=0.0, z=3.5, pitch=-45.0):
+def convert_world_to_pixel(X, Y, Z=0.0, cx=320, cy=240, fov_x=90.0, x=2.3, y=0.0, z=3.5, pitch=-45.0):
     """
     월드 좌표 (X,Y,[Z=0]) → 픽셀 좌표 (u,v) 변환
     - 월드 평면 z=0(지면)을 가정
@@ -59,7 +59,7 @@ def convert_world_to_pixel(X, Y, cx=320, cy=240, fov_x=90.0, x=2.3, y=0.0, z=3.5
     R_w2c = R_c2w.T                                   # 월드 → 카메라 (정방향 행렬의 전치)
 
     # ───── 월드 → 카메라 ─────
-    Pw = np.array([X, Y, 0.0])                        # 지면 상의 점 (Z=0)
+    Pw = np.array([X, Y, Z])                        # 지면 상의 점 (Z=0)
     Pc = R_w2c @ (Pw - cam_pos)                       # 카메라 좌표계 점
 
     # 투영면(이미지) 뒤에 있으면 반환 불가

@@ -51,7 +51,7 @@ void CircleTracking::obstaclesCallback(const obstacle_detector::msg::Obstacles::
 
     RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 2000,
                          "No circles detected – publishing NaN pose");
-    // return;
+    return;
   }
   
   // 첫 번째 원을 초기값으로 설정
