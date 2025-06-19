@@ -62,7 +62,11 @@ class ImageProcessor():
             for x,y in pts_back:
                 cv.circle(image, (int(x), int(y)), 4, (0,0,0), -1)
 
-            cv.imshow(f"Centers on Original {truck_id}", image)
+            # cv.imshow(f"Centers on Original {truck_id}", image)
+            if truck_id == 0:
+                cv.imshow(f"Lead Vehicle", image)
+            else:
+                cv.imshow(f"Following Vehicle {truck_id}", image)
 
         cv.waitKey(1)
         return centers

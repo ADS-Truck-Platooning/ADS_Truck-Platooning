@@ -57,10 +57,10 @@ LongitudinalController::LongitudinalController(const rclcpp::NodeOptions & optio
         if (param.get_name() == "desired_gap") {
           desired_gap_ = param.as_double();
           gap_ctrl_.set_desired_gap(desired_gap_);
-          RCLCPP_INFO(this->get_logger(), "desired_gap updated: %f", desired_gap_);
+          // RCLCPP_INFO(this->get_logger(), "desired_gap updated: %f", desired_gap_);
         } else if (param.get_name() == "desired_velocity") {
           desired_velocity_ = param.as_double();
-          RCLCPP_INFO(this->get_logger(), "desired_velocity updated: %f", desired_velocity_);
+          // RCLCPP_INFO(this->get_logger(), "desired_velocity updated: %f", desired_velocity_);
         }
       }
 
@@ -193,12 +193,14 @@ void LongitudinalController::timerCallback()
     // desired_velocity_ = lead_velocity_ + vel_correction;
     const double vel_correction = gap_ctrl_.update(ref_velocity_, current_gap_, gap_rate_);
     desired_velocity_ = vel_correction;
-    RCLCPP_INFO(this->get_logger(), "desired_velocity: %f", desired_velocity_);
+    // RCLCPP_INFO(this->get_logger(), "desired_velocity: %f", desired_velocity_);
   }
 
   if (truck_id_ == 0 && !camera_on_) 
   {
     desired_velocity_ = std::max(0.0, desired_velocity_ - dec_rate_ * dt);
+    RCLCPP_INFO(this->get_logger(), "########## Camera Off Scenario ##########\ndesired velocity: %f", desired_velocity_);
+    RCLCPP_INFO(this->get_logger(), "desired velocity: %f", desired_velocity_);
   }
 
   if (truck_id_ != 2)
@@ -245,12 +247,12 @@ void LongitudinalController::timerCallback()
     msg.data = desired_gap_;
     pub_desired_gap_->publish(msg);
 
-    RCLCPP_INFO(this->get_logger(), "reference_velocity: %f", ref_velocity_);
-    RCLCPP_INFO(this->get_logger(), "current_gap: %f", current_gap_);
-    RCLCPP_INFO(this->get_logger(), "gap_rate: %f", gap_rate_);
-    RCLCPP_INFO(this->get_logger(), "desired_velocity: %f", desired_velocity_);
-    RCLCPP_INFO(this->get_logger(), "ego_velocity: %f", ego_velocity_);
-    RCLCPP_INFO(this->get_logger(), "throttle_u: %f", throttle_u);
+    // RCLCPP_INFO(this->get_logger(), "reference_velocity: %f", ref_velocity_);
+    // RCLCPP_INFO(this->get_logger(), "current_gap: %f", current_gap_);
+    // RCLCPP_INFO(this->get_logger(), "gap_rate: %f", gap_rate_);
+    // RCLCPP_INFO(this->get_logger(), "desired_velocity: %f", desired_velocity_);
+    // RCLCPP_INFO(this->get_logger(), "ego_velocity: %f", ego_velocity_);
+    // RCLCPP_INFO(this->get_logger(), "throttle_u: %f", throttle_u);
   }
 }
 
