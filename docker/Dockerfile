@@ -34,18 +34,26 @@ RUN apt-get update && \
     update-alternatives --install /usr/bin/clang++ clang++ /usr/lib/llvm-10/bin/clang++ 180 && \
     update-alternatives --install /usr/bin/clang clang /usr/lib/llvm-10/bin/clang 180
 
+# Python 3.8 및 관련 라이브러리 설치 (deadsnakes PPA로 Ubuntu 22.04에서 3.8 지원)
+RUN add-apt-repository ppa:deadsnakes/ppa && \
+    apt-get update && \
+    apt-get install -y \
+        python3.8 \
+        python3.8-dev \
+        python3.8-distutils \
+        python3.8-venv \
+        python3-pip && \
+    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 1 && \
+    curl -sS https://bootstrap.pypa.io/pip/3.8/get-pip.py | python3.8
+
 # 파이썬 패키지 설치
-RUN pip install --upgrade pip && \
-    pip3 install --upgrade pip && \
-    pip install --no-cache-dir setuptools && \
-    pip3 install --no-cache-dir -Iv setuptools==47.3.1 && \
-    pip install --no-cache-dir distro && \
-    pip3 install --no-cache-dir distro && \
-    pip install --no-cache-dir wheel && \
-    pip3 install --no-cache-dir wheel auditwheel && \
-    pip3 install --no-cache-dir pygame && \
-    pip3 install typing-extensions && \
-    pip3 install --no-cache-dir setuptools==58.3.0
+RUN pip3.8 install --no-cache-dir --upgrade --ignore-installed \
+        setuptools==47.3.1 \
+        wheel \
+        distro \
+        pygame \
+        typing-extensions \
+        numpy
 
 # ROS 2 환경 설정
 SHELL ["/bin/bash", "-c"]
@@ -55,8 +63,12 @@ RUN echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc && \
 # ros-humble-pcl-ros 설치
 RUN apt-get update && apt-get install -y ros-humble-pcl-ros
 
-# 워크스페이스 생성
-WORKDIR /ADS_Truck-Platooning
+# entrypoint 스크립트 복사
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
-# 기본 실행 셸
+# 워크스페이스 생성
+WORKDIR /ADS_Truck-Platooning/platoon_ws
+
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["bash"]

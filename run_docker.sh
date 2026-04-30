@@ -1,5 +1,7 @@
 #!/bin/bash
 
+xhost +local:root
+
 docker run --gpus all -it --rm \
   --net=host \
   --ipc=host \
